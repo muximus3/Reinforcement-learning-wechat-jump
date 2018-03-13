@@ -129,11 +129,8 @@ def feature_trick():
 
 
 if __name__ == '__main__':
-    from dqn import WechatJumpEnv
-
-    env = WechatJumpEnv(10, (100, 180, 1))
-    e_img = env.feature_trick()
-    show(e_img)
+    fib = lambda n, x=0, y=1: x if not n else fib(n-1, y, x + y)
+    print(fib(8))
     # show(screen_shot())
     # a = np.array([[0,3,3,3],[0,0,2,2],[0,0,0,1]])
     # print(a)

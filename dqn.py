@@ -50,10 +50,11 @@ class DQN(object):
         self.epsilon = max(self.epsilon, self.epsilon_mini)
         if np.random.random() < self.epsilon:
             action = self.env.action_space.sample()
+            return False, action
         else:
             action = np.argmax(self.model.predict(np.array([state]))[0])
             print('model action: {}'.format(action))
-        return action
+            return True, action
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
@@ -284,9 +285,9 @@ if __name__ == '__main__':
                         filemode='w')
     action_space = 10
     gamma = 0.9
-    epsilon = .95
+    epsilon = .99
     epsilon_min = 0.01
-    epsilon_decay = 0.985
+    epsilon_decay = 0.995
     max_memory = 1000
     tau = .125
     input_dims = (100, 180, 1)
@@ -296,14 +297,16 @@ if __name__ == '__main__':
     target_model = CNNModel((8, 4, 3), (80, 80, 60), input_dims, action_space).build_model()
     dqn_agent = DQN(env, model, target_model, epsilon, epsilon_decay, epsilon_min, gamma, tau, max_memory, input_dims)
     try:
-        for eposide in range(3000):
+        for eposide in range(30000):
             cur_state = env.feature_trick()
             # 防止没有进入游戏就开始训练
             if env.match_end():
                 env.reset()
                 continue
-            action = dqn_agent.choose_act(cur_state)
+            model_pred, action = dqn_agent.choose_act(cur_state)
             new_state, reward, done = env.step(action)
+            if done and model_pred:
+                cv2.imwrite('fail_states/ep_{}_action_{}.jpg'.format(eposide, action), cur_state)
             dqn_agent.remember(cur_state, action, reward, new_state, done)
             # 核心算法
             dqn_agent.replay()
